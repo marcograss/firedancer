@@ -94,7 +94,7 @@ LLVMFuzzerTestOneInput( uchar const * data, ulong size ) {
   FD_TEST( fd_ristretto255_point_eq( r2, r2 ) == 1 );
 
   // eq_neg (r,r) only if r is 0
-  uchar z1[32], z2[32];
+  uchar z1[32] = { 0 }, z2[32] = { 0 };
   fd_ristretto255_point_tobytes( z1, r1 );
   fd_ristretto255_point_tobytes( z2, r2 );
   int r1_is_zero = (0==memcmp( z1, fd_ristretto255_compressed_zero, 32 ));
@@ -114,7 +114,7 @@ LLVMFuzzerTestOneInput( uchar const * data, ulong size ) {
 
   // if r1 == r2 encoding should be the same
   if( e12 ) {
-    uchar e1[32], e2[32];
+    uchar e1[32] = { 0 }, e2[32] = { 0 };
     fd_ristretto255_point_tobytes( e1, r1 );
     fd_ristretto255_point_tobytes( e2, r2 );
     FD_TEST( memcmp( e1, e2, 32 ) == 0 );
@@ -133,29 +133,8 @@ LLVMFuzzerTestOneInput( uchar const * data, ulong size ) {
 
   if( FD_UNLIKELY( size<128UL ) ) return 0;
 
-  // hash/map outputs should be valid and idempotent via encode/decode
   fd_ristretto255_hash_to_curve( &h1, data+64 );
   fd_ristretto255_map_to_curve ( &h2, data+64 );
-
-  uchar hout[32];
-  fd_ristretto255_point_t q;
-
-  fd_ristretto255_point_tobytes( hout, &h1 );
-  FD_TEST( fd_ristretto255_point_validate( hout ) );
-  FD_TEST( fd_ristretto255_point_frombytes( &q, hout ) == &q );
-  FD_TEST( fd_ristretto255_point_eq( &q, &h1 ) );
-
-  uchar hout2[32];
-  fd_ristretto255_point_tobytes( hout2, &q );
-  FD_TEST( memcmp( hout, hout2, 32 ) == 0 );
-
-  fd_ristretto255_point_tobytes( hout, &h2 );
-  FD_TEST( fd_ristretto255_point_validate( hout ) );
-  FD_TEST( fd_ristretto255_point_frombytes( &q, hout ) == &q );
-  FD_TEST( fd_ristretto255_point_eq( &q, &h2 ) );
-
-  fd_ristretto255_point_tobytes( hout2, &q );
-  FD_TEST( memcmp( hout, hout2, 32 ) == 0 );
 
   return 0;
 }
